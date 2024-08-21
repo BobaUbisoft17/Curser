@@ -1,6 +1,6 @@
 from datetime import date, datetime
-from sqlalchemy import func, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, func, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
 
@@ -17,3 +17,22 @@ class User(Base):
     first_login: Mapped[datetime] = mapped_column(insert_default=func.now())
     avatar: Mapped[str]
     password: Mapped[str]
+
+    courses: Mapped[list["Course"]] = relationship(back_populates="author")
+
+
+class Course(Base):
+    __tablename__ = "course"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(String(4096), nullable=True)
+    reviews: Mapped[float]
+    date_started: Mapped[date]
+    workload: Mapped[str]
+    language: Mapped[str] = mapped_column(String(20))
+    avatar: Mapped[str]
+
+    author_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+    author: Mapped["User"] = relationship(back_populates="courses")
+ 
