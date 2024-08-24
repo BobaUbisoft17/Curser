@@ -25,6 +25,7 @@ async def get_token(
 ) -> Tokens:
 
     payload = {
+        "id": user.id,
         "username": user.username,
         "email": user.email
     }
