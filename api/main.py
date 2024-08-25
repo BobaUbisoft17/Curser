@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .auth import router
+from .auth.router import router as auth_router
 from .auth.token_service import AuthJWT
 from .config import Config
 from .database import Database
@@ -21,7 +21,7 @@ class Memourse:
 
     def create_app(self) -> FastAPI:
         app = FastAPI()
-        app.include_router(router.router)
+        app.include_router(auth_router)
         app.include_router(profile_router)
         app.add_middleware(BaseHTTPMiddleware, dispatch=self.db_middleware)
         app.add_middleware(BaseHTTPMiddleware, dispatch=self.jwt_middlware)
