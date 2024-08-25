@@ -5,7 +5,6 @@ from pydantic import BaseModel, EmailStr, Field
 
 class AccessToken(BaseModel):
     access: str
-    type: str = "Bearer"
 
 
 class RefreshToken(BaseModel):
@@ -13,7 +12,7 @@ class RefreshToken(BaseModel):
 
 
 class Tokens(AccessToken, RefreshToken):
-    pass
+    type: str = "Bearer"
 
 
 class LoginData(BaseModel):
