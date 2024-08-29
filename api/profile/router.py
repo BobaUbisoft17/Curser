@@ -3,9 +3,10 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .dependencies import UserDataIsValid
 from .exceptions import UserDoesNotExist
-from .schemas import PublicUserProfile, UserProfile
-from .service import delete_user, get_user
+from .schemas import PublicUserProfile, UpdateUserProfile, UserProfile
+from .service import delete_user, get_user, update_user
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
 
 
@@ -23,6 +24,15 @@ async def get_user_profile(
         raise UserDoesNotExist
 
     return user
+
+
+@router.put("")
+async def update_user_data(
+    new_user_data: Annotated[UpdateUserProfile, Depends(UserDataIsValid())],
+    payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+) -> UserProfile:
+    return await update_user(session, payload["id"], new_user_data)
 
 
 @router.delete("")
