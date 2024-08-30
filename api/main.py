@@ -9,6 +9,7 @@ from .config import Config
 from .database import Database
 from .middlewares import DatabaseMiddleware, JWTMiddleware
 from .profile.router import router as profile_router
+from .teaching.router import router as teaching_router
 
 
 class Memourse:
@@ -23,8 +24,11 @@ class Memourse:
 
     def create_app(self) -> FastAPI:
         app = FastAPI()
+
         app.include_router(auth_router)
         app.include_router(profile_router)
+        app.include_router(teaching_router)
+
         app.add_middleware(BaseHTTPMiddleware, dispatch=self.db_middleware)
         app.add_middleware(BaseHTTPMiddleware, dispatch=self.jwt_middlware)
         return app
