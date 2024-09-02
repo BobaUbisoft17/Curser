@@ -29,3 +29,22 @@ class CourseOnAnswer(CourseOnCreate):
 class CourseDataForVerification(BaseModel):
     name: str | None = Field(max_length=64, default=None)
     date_started: date | None = None
+
+
+class BaseChapter(BaseModel):
+    description: str | None = Field(max_length=4096, default=None)
+    avatar: str | None = None
+
+
+class ChapterOnCreate(BaseChapter):
+    name: str = Field(max_length=100)
+
+
+class ChapterOnUpdate(BaseChapter):
+    name: str | None = Field(max_length=100, default=None)
+    lessons_sequence: list[int] = []
+
+
+class ChapterOnAnswer(ChapterOnCreate):
+    id: int
+    lessons_sequence: list[int] = []
