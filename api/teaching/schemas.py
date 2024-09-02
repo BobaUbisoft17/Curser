@@ -48,3 +48,17 @@ class ChapterOnUpdate(BaseChapter):
 class ChapterOnAnswer(ChapterOnCreate):
     id: int
     lessons_sequence: list[int] = []
+
+
+class LessonOnCreate(BaseModel):
+    name: str = Field(max_length=50)
+    content: str = Field(max_length=16384)
+
+
+class LessonOnUpdate(BaseModel):
+    name: str | None = Field(max_length=50, default=None)
+    content: str | None = Field(max_length=16384, default=None)
+
+
+class LessonOnAnswer(LessonOnCreate):
+    id: int

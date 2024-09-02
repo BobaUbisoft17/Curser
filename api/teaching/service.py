@@ -6,8 +6,10 @@ from .schemas import (
     ChapterOnUpdate,
     CourseOnCreate,
     CourseOnUpdate,
+    LessonOnCreate,
+    LessonOnUpdate,
 )
-from ..models import Chapter, Course
+from ..models import Chapter, Course, Lesson
 
 
 async def create_course(
@@ -85,4 +87,44 @@ async def update_chapter(
 
 async def delete_chapter(chapter_id: int, session: AsyncSession) -> None:
     await session.execute(delete(Chapter).where(Chapter.id == chapter_id))
+    await session.commit()
+
+
+async def create_lesson(
+    chapter_id: int, lesson: LessonOnCreate, session: AsyncSession
+) -> Lesson:
+    lesson = Lesson(
+        **lesson.model_dump(exclude_unset=True), chapter_id=chapter_id
+    )
+    session.add(lesson)
+    await session.commit()
+    await session.refresh(lesson)
+
+    return lesson
+
+
+async def get_lessons(chapter_id: int, session: AsyncSession) -> list[Lesson]:
+    return await session.scalars(
+        select(Lesson).where(Lesson.chapter_id == chapter_id)
+    )
+
+
+async def update_lesson(
+    lesson_id: int, lesson_changes: LessonOnUpdate, session: AsyncSession
+) -> Lesson:
+    lesson = await session.scalar(
+        update(Lesson)
+        .where(Lesson.id == lesson_id)
+        .values(**lesson_changes.model_dump(exclude_unset=True))
+        .returning(Lesson)
+    )
+
+    await session.commit()
+    await session.refresh(lesson)
+
+    return lesson
+
+
+async def delete_lesson(lesson_id: int, session: AsyncSession) -> None:
+    await session.execute(delete(Lesson).where(Lesson.id == lesson_id))
     await session.commit()

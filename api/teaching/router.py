@@ -11,16 +11,23 @@ from .schemas import (
     CourseOnAnswer,
     CourseOnCreate,
     CourseOnUpdate,
+    LessonOnAnswer,
+    LessonOnCreate,
+    LessonOnUpdate,
 )
 from .service import (
     create_chapter,
     create_course,
+    create_lesson,
     delete_chapter,
     delete_course,
+    delete_lesson,
     get_chapters,
     get_course,
+    get_lessons,
     update_chapter,
     update_course,
+    update_lesson,
 )
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
 
@@ -101,4 +108,50 @@ async def delete_chapter_handler(
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> Response:
     await delete_chapter(chapter_id, session)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/course/{course_id}/chapter/{chapter_id}/lesson",
+    dependencies=[Depends(IsAuthor())],
+)
+async def create_lesson_handler(
+    chapter_id: int,
+    lesson: LessonOnCreate,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+) -> LessonOnAnswer:
+    return await create_lesson(chapter_id, lesson, session)
+
+
+@router.get(
+    "/course/{course_id}/chapter/{chapter_id}/lessons",
+    dependencies=[Depends(IsAuthor())],
+)
+async def get_lessons_handler(
+    chapter_id: int,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+) -> list[LessonOnAnswer]:
+    return await get_lessons(chapter_id, session)
+
+
+@router.put(
+    "/course/{course_id}/lesson/{lesson_id}", dependencies=[Depends(IsAuthor())]
+)
+async def update_lesson_handler(
+    lesson_id: int,
+    lesson_changes: LessonOnUpdate,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+) -> LessonOnAnswer:
+    return await update_lesson(lesson_id, lesson_changes, session)
+
+
+@router.delete(
+    "/course/{course_id}/lesson/{lesson_id}", dependencies=[Depends(IsAuthor())]
+)
+async def delete_lesson_handler(
+    lesson_id: int,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+) -> Response:
+    await delete_lesson(lesson_id, session)
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
