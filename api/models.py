@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import ForeignKey, String, func
+from sqlalchemy import ForeignKey, JSON, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -37,6 +37,7 @@ class Course(Base):
     workload: Mapped[str] = mapped_column(nullable=True)
     language: Mapped[str] = mapped_column(String(20))
     avatar: Mapped[str] = mapped_column(nullable=True)
+    chapters_sequense: Mapped[list[int]] = mapped_column(JSON(), insert_default=[], server_default="[]")
 
     author_id: Mapped[int] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE")
