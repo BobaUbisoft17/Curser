@@ -74,6 +74,7 @@ class Chapter(Base):
     name: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(String(4096), nullable=True)
     avatar: Mapped[str] = mapped_column(nullable=True)
+    lessons_sequence: Mapped[list[int]] = mapped_column(JSON(), insert_default=[], server_default="[]")
 
     course_id: Mapped[int] = mapped_column(
         ForeignKey("course.id", ondelete="CASCADE")
