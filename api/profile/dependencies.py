@@ -41,4 +41,6 @@ class UserDataIsValid:
         if email is None:
             return True
 
-        return not await session.scalar(select(exists().where(User.email == email)))
+        return not await session.scalar(
+            select(exists().where(User.email == email))
+        )

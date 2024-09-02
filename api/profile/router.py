@@ -39,7 +39,7 @@ async def update_user_data(
 async def delete_user_data(
     payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
-):
+) -> Response:
     await delete_user(session, payload["id"])
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
