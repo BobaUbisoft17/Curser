@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .dependencies import UserDataIsValid
@@ -41,7 +41,7 @@ async def delete_user_data(
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ):
     await delete_user(session, payload["id"])
-    return {"message": "User successfuly deleted"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{user_id}", dependencies=[Depends(IsAuthenticated())])
