@@ -10,7 +10,8 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
 
 
 async def delete_user(session: AsyncSession, user_id: int) -> None:
-    await session.scalar(delete(User).where(User.id == user_id))
+    await session.execute(delete(User).where(User.id == user_id))
+    await session.commit()
 
 
 async def update_user(
