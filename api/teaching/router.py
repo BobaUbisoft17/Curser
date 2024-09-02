@@ -21,10 +21,10 @@ async def create_course_handler(
     return await create_course(course_data, payload["id"], session)
 
 
-@router.get("/course/{course_id}", dependencies=[Depends(IsAuthenticated())])
+@router.get("/course/{course_id}", dependencies=[Depends(IsAuthor())])
 async def get_course_handler(
     course_id: int,
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> CourseOnAnswer:
     return await get_course(course_id, session)
 
@@ -33,12 +33,15 @@ async def get_course_handler(
 async def change_course_handler(
     course_id: int,
     course_changes: Annotated[CourseOnUpdate, Depends(CourseValidOnUpdate())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> CourseOnAnswer:
     return await update_course(course_id, course_changes, session)
 
 
 @router.delete("/course/{course_id}", dependencies=[Depends(IsAuthor())])
-async def delete_course_handler(course_id: int, session: Annotated[AsyncSession, Depends(DatabaseSession())]):
+async def delete_course_handler(
+    course_id: int,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
+):
     await delete_course(course_id, session)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
