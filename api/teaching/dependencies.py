@@ -5,10 +5,10 @@ from fastapi import Depends
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .exceptions import CourseNameIsTaken, DateIsIncorrect
+from .exceptions import CourseNameIsTaken, DateIsIncorrect, InsufficientRights
 from .schemas import CourseDataForVerification, CourseOnCreate, CourseOnUpdate
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
-from ..models import Course
+from ..models import Chapter, Course, Lesson
 
 
 class CourseValidOnUpdate:
@@ -60,18 +60,58 @@ class CourseDataIsValid:
         return self.course_data.date_started < date.today()
 
 
-class IsAuthor:
+class IsCourseAuthor:
 
     async def __call__(
         self,
         course_id: int,
         payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
         session: Annotated[AsyncSession, Depends(DatabaseSession())],
-    ) -> bool:
-        return await session.scalar(
+    ) -> int:
+        if not await session.scalar(
             select(
                 exists().where(
                     Course.id == course_id, Course.author_id == payload["id"]
                 )
             )
-        )
+        ):
+            raise InsufficientRights
+        return course_id
+
+
+class IsChapterAuthor:
+
+    async def __call__(
+        self,
+        chapter_id: int,
+        course_id: Annotated[int, Depends(IsCourseAuthor())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())],
+    ) -> int:
+        print(course_id, chapter_id)
+        if not await session.scalar(
+            select(
+                exists().where(
+                    Chapter.course_id == course_id, Chapter.id == chapter_id
+                )
+            )
+        ):
+            raise InsufficientRights
+        return chapter_id
+
+
+class IsLessonAuthor:
+
+    async def __call__(
+        self,
+        lesson_id: int,
+        chapter_id: Annotated[int, Depends(IsChapterAuthor())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())],
+    ) -> None:
+        if not await session.scalar(
+            select(
+                exists().where(
+                    Lesson.chapter_id == chapter_id, Lesson.id == lesson_id
+                )
+            )
+        ):
+            raise InsufficientRights

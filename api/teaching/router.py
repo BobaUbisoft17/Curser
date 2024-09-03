@@ -3,7 +3,13 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .dependencies import CourseValidOnCreate, CourseValidOnUpdate, IsAuthor
+from .dependencies import (
+    CourseValidOnCreate,
+    CourseValidOnUpdate,
+    IsChapterAuthor,
+    IsCourseAuthor,
+    IsLessonAuthor,
+)
 from .schemas import (
     ChapterOnAnswer,
     ChapterOnCreate,
@@ -44,7 +50,7 @@ async def create_course_handler(
     return await create_course(course_data, payload["id"], session)
 
 
-@router.get("/course/{course_id}", dependencies=[Depends(IsAuthor())])
+@router.get("/course/{course_id}", dependencies=[Depends(IsCourseAuthor())])
 async def get_course_handler(
     course_id: int,
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
@@ -52,7 +58,7 @@ async def get_course_handler(
     return await get_course(course_id, session)
 
 
-@router.put("/course/{course_id}", dependencies=[Depends(IsAuthor())])
+@router.put("/course/{course_id}", dependencies=[Depends(IsCourseAuthor())])
 async def change_course_handler(
     course_id: int,
     course_changes: Annotated[CourseOnUpdate, Depends(CourseValidOnUpdate())],
@@ -61,7 +67,7 @@ async def change_course_handler(
     return await update_course(course_id, course_changes, session)
 
 
-@router.delete("/course/{course_id}", dependencies=[Depends(IsAuthor())])
+@router.delete("/course/{course_id}", dependencies=[Depends(IsCourseAuthor())])
 async def delete_course_handler(
     course_id: int,
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
@@ -70,7 +76,7 @@ async def delete_course_handler(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/course/{course_id}/chapter", dependencies=[Depends(IsAuthor())])
+@router.post("/course/{course_id}/chapter", dependencies=[Depends(IsCourseAuthor())])
 async def create_chapter_handler(
     course_id: int,
     chapter_data: ChapterOnCreate,
@@ -79,7 +85,7 @@ async def create_chapter_handler(
     return await create_chapter(course_id, chapter_data, session)
 
 
-@router.get("/course/{course_id}/chapters", dependencies=[Depends(IsAuthor())])
+@router.get("/course/{course_id}/chapters", dependencies=[Depends(IsCourseAuthor())])
 async def get_chapters_handler(
     course_id: int,
     session: Annotated[AsyncSession, Depends(DatabaseSession())],
@@ -89,7 +95,7 @@ async def get_chapters_handler(
 
 @router.put(
     "/course/{course_id}/chapter/{chapter_id}",
-    dependencies=[Depends(IsAuthor())],
+    dependencies=[Depends(IsChapterAuthor())],
 )
 async def update_chapter_handler(
     chapter_id: int,
@@ -101,7 +107,7 @@ async def update_chapter_handler(
 
 @router.delete(
     "/course/{course_id}/chapter/{chapter_id}",
-    dependencies=[Depends(IsAuthor())],
+    dependencies=[Depends(IsChapterAuthor())],
 )
 async def delete_chapter_handler(
     chapter_id: int,
@@ -113,7 +119,7 @@ async def delete_chapter_handler(
 
 @router.post(
     "/course/{course_id}/chapter/{chapter_id}/lesson",
-    dependencies=[Depends(IsAuthor())],
+    dependencies=[Depends(IsChapterAuthor())],
 )
 async def create_lesson_handler(
     chapter_id: int,
@@ -125,7 +131,7 @@ async def create_lesson_handler(
 
 @router.get(
     "/course/{course_id}/chapter/{chapter_id}/lessons",
-    dependencies=[Depends(IsAuthor())],
+    dependencies=[Depends(IsChapterAuthor())],
 )
 async def get_lessons_handler(
     chapter_id: int,
@@ -135,7 +141,8 @@ async def get_lessons_handler(
 
 
 @router.put(
-    "/course/{course_id}/lesson/{lesson_id}", dependencies=[Depends(IsAuthor())]
+    "/course/{course_id}/chapter/{chapter_id}/lesson/{lesson_id}",
+    dependencies=[Depends(IsLessonAuthor())],
 )
 async def update_lesson_handler(
     lesson_id: int,
@@ -146,7 +153,8 @@ async def update_lesson_handler(
 
 
 @router.delete(
-    "/course/{course_id}/lesson/{lesson_id}", dependencies=[Depends(IsAuthor())]
+    "/course/{course_id}/chapter/{chapter_id}/lesson/{lesson_id}",
+    dependencies=[Depends(IsLessonAuthor())],
 )
 async def delete_lesson_handler(
     lesson_id: int,
