@@ -87,7 +87,6 @@ class IsChapterAuthor:
         course_id: Annotated[int, Depends(IsCourseAuthor())],
         session: Annotated[AsyncSession, Depends(DatabaseSession())],
     ) -> int:
-        print(course_id, chapter_id)
         if not await session.scalar(
             select(
                 exists().where(
