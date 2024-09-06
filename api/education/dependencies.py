@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .exceptions import (
     ChapterDoesNotExist,
     CourseDoesNotExist,
+    ReviewDoesNotExist,
     UserHasNotAccess,
 )
 from .models import UserCourse
-from .schemas import CourseOnAdmission
+from .schemas import CourseOnAdmission, ReviewOnCreate
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
-from ..models import Chapter, Course, Lesson
+from ..models import Chapter, Course, Lesson, Review
 
 
 class CourseExistBody:
@@ -124,3 +125,48 @@ class HasAccessToLesson:
         ):
             raise UserHasNotAccess
         return lesson_id
+
+
+class HasAccessToCourse:
+
+    async def __call__(
+        self,
+        review: ReviewOnCreate,
+        course_id: Annotated[int, Depends(CourseExistBody())],
+        payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> ReviewOnCreate:
+        if not await session.scalar(
+            select(exists().where(UserCourse.user_id == payload["id"], UserCourse.course_id == course_id))
+        ):
+            raise UserHasNotAccess
+        return review
+
+
+class ReviewIsExist:
+
+    async def __call__(
+        self,
+        review_id: int,
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> int:
+        if not await session.scalar(
+            select(exists().where(Review.id == review_id))
+        ):
+            raise ReviewDoesNotExist
+        return review_id
+
+
+class IsReviewAuthor:
+
+    async def __call__(
+        self,
+        review_id: Annotated[int, Depends(ReviewIsExist())],
+        payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())] 
+    ) -> int:
+        if not await session.scalar(
+            select(exists().where(Review.id == review_id, Review.author_id == payload["id"]))
+        ):
+            raise UserHasNotAccess
+        return review_id

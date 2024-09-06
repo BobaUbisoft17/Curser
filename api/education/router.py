@@ -7,15 +7,21 @@ from .dependencies import (
     CourseExistBody,
     CourseExistPathParam,
     HasAccessToChapter,
+    HasAccessToCourse,
     HasAccessToLesson,
+    IsReviewAuthor,
 )
-from .schemas import CourseInfo, CoursePreview, LessonInfo, LessonPreview
+from .schemas import CourseInfo, CoursePreview, LessonInfo, LessonPreview, ReviewOnAnswer, ReviewOnCreate, ReviewOnUpdate
 from .service import (
     add_course_for_education,
+    create_review,
+    delete_review,
     get_course_info,
+    get_course_reviews,
     get_lesson,
     get_lessons,
     get_user_courses,
+    update_reveiw,
 )
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
 
@@ -71,12 +77,38 @@ async def get_lesson_handler(
     return await get_lesson(lesson_id, session)
 
 
-# @router.post("/review")
-# async def create_review_handler():
-#    ...
-#
-#
-# @router.post("/comment")
-# async def create_comment_handler():
-#    ...
-#
+@router.get("/course/{course_id}/reviews", dependencies=[Depends(IsAuthenticated())])
+async def get_course_reviews_handler(
+    course_id: Annotated[int, Depends(CourseExistPathParam())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> list:
+    return await get_course_reviews(course_id, session)
+
+
+@router.post("/review")
+async def create_review_handler(
+    review: Annotated[ReviewOnCreate, Depends(HasAccessToCourse())],
+    payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> ReviewOnAnswer:
+    return await create_review(review, payload["id"], session)
+
+
+@router.put("/review/{review_id}")
+async def update_review_handler(
+    review_id: Annotated[int, Depends(IsReviewAuthor())],
+    review_data: ReviewOnUpdate,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> ReviewOnAnswer:
+    return await update_reveiw(review_id, review_data, session)
+
+
+@router.delete("/review/{review_id}")
+async def delete_review_handler(
+    review_id: Annotated[int, Depends(IsReviewAuthor())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> Response:
+    
+    await delete_review(review_id, session)
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
