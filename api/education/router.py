@@ -14,7 +14,18 @@ from .dependencies import (
     IsCommentAuthor,
     IsReviewAuthor,
 )
-from .schemas import CommentOnAnswer, CommentOnCreate, CommentOnUpdate, CourseInfo, CoursePreview, LessonInfo, LessonPreview, ReviewOnAnswer, ReviewOnCreate, ReviewOnUpdate
+from .schemas import (
+    CommentOnAnswer,
+    CommentOnCreate,
+    CommentOnUpdate,
+    CourseInfo,
+    CoursePreview,
+    LessonInfo,
+    LessonPreview,
+    ReviewOnAnswer,
+    ReviewOnCreate,
+    ReviewOnUpdate,
+)
 from .service import (
     add_course_for_education,
     create_comment,
@@ -85,10 +96,12 @@ async def get_lesson_handler(
     return await get_lesson(lesson_id, session)
 
 
-@router.get("/course/{course_id}/reviews", dependencies=[Depends(IsAuthenticated())])
+@router.get(
+    "/course/{course_id}/reviews", dependencies=[Depends(IsAuthenticated())]
+)
 async def get_course_reviews_handler(
     course_id: Annotated[int, Depends(CourseExistPathParam())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> list[ReviewOnAnswer]:
     return await get_course_reviews(course_id, session)
 
@@ -97,7 +110,7 @@ async def get_course_reviews_handler(
 async def create_review_handler(
     review: Annotated[ReviewOnCreate, Depends(HasAccessToCourse())],
     payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> ReviewOnAnswer:
     return await create_review(review, payload["id"], session)
 
@@ -106,7 +119,7 @@ async def create_review_handler(
 async def update_review_handler(
     review_id: Annotated[int, Depends(IsReviewAuthor())],
     review_data: ReviewOnUpdate,
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> ReviewOnAnswer:
     return await update_reveiw(review_id, review_data, session)
 
@@ -114,21 +127,22 @@ async def update_review_handler(
 @router.delete("/review/{review_id}")
 async def delete_review_handler(
     review_id: Annotated[int, Depends(IsReviewAuthor())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> Response:
-    
+
     await delete_review(review_id, session)
-    
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/lesson/{lesson_id}/comments", dependencies=[Depends(IsAuthenticated())])
+@router.get(
+    "/lesson/{lesson_id}/comments", dependencies=[Depends(IsAuthenticated())]
+)
 async def get_comments_handler(
     lesson_id: Annotated[int, Depends(HasAccessToLesson())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> list[CommentOnAnswer]:
     return await get_comments(lesson_id, session)
-
 
 
 @router.post("/lesson/{lesson_id}/comment")
@@ -136,7 +150,7 @@ async def create_comment_handler(
     comment: Annotated[CommentOnCreate, Depends(CommentIsValid())],
     lesson_id: int,
     payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> CommentOnAnswer:
     return await create_comment(comment, lesson_id, payload["id"], session)
 
@@ -144,7 +158,7 @@ async def create_comment_handler(
 @router.get("/comment/{comment_id}/subcomments")
 async def get_subcomments_handler(
     comment_id: Annotated[int, Depends(CommentIsExist())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> list[CommentOnAnswer]:
     return await get_subcomments(comment_id, session)
 
@@ -153,7 +167,7 @@ async def get_subcomments_handler(
 async def update_comment_handler(
     comment_id: Annotated[int, Depends(IsCommentAuthor())],
     comment_changes: CommentOnUpdate,
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> CommentOnAnswer:
     return await update_comment(comment_id, comment_changes, session)
 
@@ -161,8 +175,8 @@ async def update_comment_handler(
 @router.delete("/comment/{comment_id}")
 async def delete_comment_handler(
     comment_id: Annotated[int, Depends(IsCommentAuthor())],
-    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    session: Annotated[AsyncSession, Depends(DatabaseSession())],
 ) -> Response:
     await delete_comment(comment_id, session)
-    
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -2,8 +2,13 @@ from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from .schemas import CommentOnCreate, CommentOnUpdate, ReviewOnCreate, ReviewOnUpdate
 from .models import UserCourse
+from .schemas import (
+    CommentOnCreate,
+    CommentOnUpdate,
+    ReviewOnCreate,
+    ReviewOnUpdate,
+)
 from ..models import Comment, Course, Lesson, Review
 
 
@@ -42,17 +47,24 @@ async def get_lesson(lesson_id: int, session: AsyncSession) -> Lesson:
     return await session.scalar(select(Lesson).where(Lesson.id == lesson_id))
 
 
-async def get_course_reviews(course_id: int, session: AsyncSession) -> list[Review]:
+async def get_course_reviews(
+    course_id: int, session: AsyncSession
+) -> list[Review]:
     return await session.scalars(
-        select(Review).where(Review.course_id == course_id).options(joinedload(Review.author))
+        select(Review)
+        .where(Review.course_id == course_id)
+        .options(joinedload(Review.author))
     )
 
 
-async def create_review(review: ReviewOnCreate, author_id: int, session: AsyncSession) -> Review:
+async def create_review(
+    review: ReviewOnCreate, author_id: int, session: AsyncSession
+) -> Review:
     review_obj = await session.scalar(
         insert(Review)
         .values(**review.model_dump(), author_id=author_id)
-        .returning(Review).options(joinedload(Review.author))
+        .returning(Review)
+        .options(joinedload(Review.author))
     )
 
     await session.commit()
@@ -60,12 +72,15 @@ async def create_review(review: ReviewOnCreate, author_id: int, session: AsyncSe
     return review_obj
 
 
-async def update_reveiw(review_id: int, review_changes: ReviewOnUpdate, session: AsyncSession) -> Review:
+async def update_reveiw(
+    review_id: int, review_changes: ReviewOnUpdate, session: AsyncSession
+) -> Review:
     review = await session.scalar(
         update(Review)
         .where(Review.id == review_id)
         .values(**review_changes.model_dump())
-        .returning(Review).options(joinedload(Review.author))
+        .returning(Review)
+        .options(joinedload(Review.author))
     )
 
     await session.commit()
@@ -75,9 +90,7 @@ async def update_reveiw(review_id: int, review_changes: ReviewOnUpdate, session:
 
 
 async def delete_review(review_id: int, session: AsyncSession) -> None:
-    await session.execute(
-        delete(Review).where(Review.id == review_id)
-    )
+    await session.execute(delete(Review).where(Review.id == review_id))
 
     await session.commit()
 
@@ -85,12 +98,16 @@ async def delete_review(review_id: int, session: AsyncSession) -> None:
 async def get_comments(lesson_id: int, session: AsyncSession) -> list[Comment]:
     return await session.scalars(
         select(Comment)
-        .where(Comment.lesson_id == lesson_id, Comment.parent_comment_id == None)
+        .where(
+            Comment.lesson_id == lesson_id, Comment.parent_comment_id is None
+        )
         .options(joinedload(Comment.author))
     )
 
 
-async def get_subcomments(comment_id: int, session: AsyncSession) -> list[Comment]:
+async def get_subcomments(
+    comment_id: int, session: AsyncSession
+) -> list[Comment]:
     return await session.scalars(
         select(Comment)
         .where(Comment.parent_comment_id == comment_id)
@@ -98,11 +115,21 @@ async def get_subcomments(comment_id: int, session: AsyncSession) -> list[Commen
     )
 
 
-async def create_comment(comment_data: CommentOnCreate, lesson_id: int, author_id: int, session: AsyncSession) -> Comment:
+async def create_comment(
+    comment_data: CommentOnCreate,
+    lesson_id: int,
+    author_id: int,
+    session: AsyncSession,
+) -> Comment:
     comment = await session.scalar(
         insert(Comment)
-        .values(**comment_data.model_dump(), lesson_id=lesson_id, author_id=author_id)
-        .returning(Comment).options(joinedload(Comment.author))
+        .values(
+            **comment_data.model_dump(),
+            lesson_id=lesson_id,
+            author_id=author_id
+        )
+        .returning(Comment)
+        .options(joinedload(Comment.author))
     )
 
     await session.commit()
@@ -111,12 +138,15 @@ async def create_comment(comment_data: CommentOnCreate, lesson_id: int, author_i
     return comment
 
 
-async def update_comment(comment_id: int, comment_changes: CommentOnUpdate, session: AsyncSession) -> Comment:
+async def update_comment(
+    comment_id: int, comment_changes: CommentOnUpdate, session: AsyncSession
+) -> Comment:
     comment = await session.scalar(
         update(Comment)
         .where(Comment.id == comment_id)
         .values(**comment_changes.model_dump())
-        .returning(Comment).options(joinedload(Comment.author))
+        .returning(Comment)
+        .options(joinedload(Comment.author))
     )
 
     await session.commit()
@@ -126,7 +156,5 @@ async def update_comment(comment_id: int, comment_changes: CommentOnUpdate, sess
 
 
 async def delete_comment(comment_id: int, session: AsyncSession) -> None:
-    await session.execute(
-        delete(Comment).where(Comment.id == comment_id)
-    )
+    await session.execute(delete(Comment).where(Comment.id == comment_id))
     await session.commit()
