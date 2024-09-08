@@ -4,23 +4,31 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .dependencies import (
+    CommentIsExist,
+    CommentIsValid,
     CourseExistBody,
     CourseExistPathParam,
     HasAccessToChapter,
     HasAccessToCourse,
     HasAccessToLesson,
+    IsCommentAuthor,
     IsReviewAuthor,
 )
-from .schemas import CourseInfo, CoursePreview, LessonInfo, LessonPreview, ReviewOnAnswer, ReviewOnCreate, ReviewOnUpdate
+from .schemas import CommentOnAnswer, CommentOnCreate, CommentOnUpdate, CourseInfo, CoursePreview, LessonInfo, LessonPreview, ReviewOnAnswer, ReviewOnCreate, ReviewOnUpdate
 from .service import (
     add_course_for_education,
+    create_comment,
     create_review,
+    delete_comment,
     delete_review,
+    get_comments,
     get_course_info,
     get_course_reviews,
     get_lesson,
     get_lessons,
+    get_subcomments,
     get_user_courses,
+    update_comment,
     update_reveiw,
 )
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
@@ -81,7 +89,7 @@ async def get_lesson_handler(
 async def get_course_reviews_handler(
     course_id: Annotated[int, Depends(CourseExistPathParam())],
     session: Annotated[AsyncSession, Depends(DatabaseSession())]
-) -> list:
+) -> list[ReviewOnAnswer]:
     return await get_course_reviews(course_id, session)
 
 
@@ -110,5 +118,51 @@ async def delete_review_handler(
 ) -> Response:
     
     await delete_review(review_id, session)
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/lesson/{lesson_id}/comments", dependencies=[Depends(IsAuthenticated())])
+async def get_comments_handler(
+    lesson_id: Annotated[int, Depends(HasAccessToLesson())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> list[CommentOnAnswer]:
+    return await get_comments(lesson_id, session)
+
+
+
+@router.post("/lesson/{lesson_id}/comment")
+async def create_comment_handler(
+    comment: Annotated[CommentOnCreate, Depends(CommentIsValid())],
+    lesson_id: int,
+    payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> CommentOnAnswer:
+    return await create_comment(comment, lesson_id, payload["id"], session)
+
+
+@router.get("/comment/{comment_id}/subcomments")
+async def get_subcomments_handler(
+    comment_id: Annotated[int, Depends(CommentIsExist())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> list[CommentOnAnswer]:
+    return await get_subcomments(comment_id, session)
+
+
+@router.put("/comment/{comment_id}")
+async def update_comment_handler(
+    comment_id: Annotated[int, Depends(IsCommentAuthor())],
+    comment_changes: CommentOnUpdate,
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> CommentOnAnswer:
+    return await update_comment(comment_id, comment_changes, session)
+
+
+@router.delete("/comment/{comment_id}")
+async def delete_comment_handler(
+    comment_id: Annotated[int, Depends(IsCommentAuthor())],
+    session: Annotated[AsyncSession, Depends(DatabaseSession())]
+) -> Response:
+    await delete_comment(comment_id, session)
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)

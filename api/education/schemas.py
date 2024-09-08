@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field, Str
+from pydantic import BaseModel, Field
 
 
 class CoursePreview(BaseModel):
@@ -55,5 +55,18 @@ class ReviewOnUpdate(BaseModel):
 
 
 class ReviewOnAnswer(ReviewOnCreate):
+    id: int
+    author: AuthorPreview
+
+
+class CommentOnUpdate(BaseModel):
+    text: str = Field(max_length=1024)
+
+
+class CommentOnCreate(CommentOnUpdate):
+    parent_comment_id: int | None = None
+
+
+class CommentOnAnswer(CommentOnCreate):
     id: int
     author: AuthorPreview

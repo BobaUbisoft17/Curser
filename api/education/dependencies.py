@@ -6,28 +6,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .exceptions import (
     ChapterDoesNotExist,
+    CommentDoesNotExist,
     CourseDoesNotExist,
+    LessonDoesNotExist,
+    ParentCommentDoesNotExist,
     ReviewDoesNotExist,
     UserHasNotAccess,
 )
 from .models import UserCourse
-from .schemas import CourseOnAdmission, ReviewOnCreate
+from .schemas import CommentOnCreate, CourseOnAdmission, ReviewOnCreate
 from ..auth.dependencies import DatabaseSession, IsAuthenticated
-from ..models import Chapter, Course, Lesson, Review
+from ..models import Chapter, Comment, Course, Lesson, Review
 
 
 class CourseExistBody:
 
     async def __call__(
         self,
-        course: CourseOnAdmission,
+        review: ReviewOnCreate,
         session: Annotated[AsyncSession, Depends(DatabaseSession())],
     ) -> int:
         if not await session.scalar(
-            select(exists().where(Course.id == course.course_id))
+            select(exists().where(Course.id == review.course_id))
         ):
             raise CourseDoesNotExist
-        return course.course_id
+        return review.course_id
 
 
 class CourseExistPathParam:
@@ -93,7 +96,7 @@ class LessonExist:
         if not await session.scalar(
             select(Lesson).where(Lesson.id == lesson_id)
         ):
-            raise ChapterDoesNotExist
+            raise LessonDoesNotExist
         return lesson_id
 
 
@@ -170,3 +173,74 @@ class IsReviewAuthor:
         ):
             raise UserHasNotAccess
         return review_id
+
+
+class IsCommentAuthor:
+
+    async def __call__(
+        self,
+        comment_id: int,
+        payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> int:
+        if not await session.scalar(
+            select(exists()
+                   .where(Comment.id == comment_id, Comment.author_id == payload["id"])
+            )
+        ):
+            raise UserHasNotAccess
+        return comment_id
+    
+
+class CommentIsValid:
+
+    async def __call__(
+        self,
+        lesson_id: Annotated[int, Depends(HasAccessToLesson())],
+        comment: CommentOnCreate,
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> CommentOnCreate:
+        if comment.parent_comment_id is not None and not await session.scalar(
+            select(exists()
+                   .where(
+                        Comment.id == comment.parent_comment_id,
+                        Comment.lesson_id == lesson_id
+                    )               
+            )
+        ):
+            raise ParentCommentDoesNotExist
+        return comment
+    
+
+class CommentIsExist:
+
+    async def __call__(
+        self,
+        comment_id: int,
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> int:
+        if not await session.scalar(
+            select(exists()
+                   .where(Comment.id == comment_id)
+            )
+        ):
+            raise CommentDoesNotExist
+        return comment_id
+    
+
+class HasAccessToComment:
+
+    async def __call__(
+        self,
+        comment_id: Annotated[int, Depends(CommentIsExist())],
+        payload: Annotated[dict[str, Any], Depends(IsAuthenticated())],
+        session: Annotated[AsyncSession, Depends(DatabaseSession())]
+    ) -> int:
+        lesson_id = select(Comment.lesson_id).where(Comment.id == comment_id).scalar_subquery()
+        chapter_id = select(Lesson.chapter_id).where(Lesson.id == lesson_id).scalar_subquery()
+        course_id = select(Chapter.course_id).where(Chapter.id == chapter_id).scalar_subquery()
+        if not await session.scalar(
+            select(exists().where(UserCourse.course_id == course_id, UserCourse.user_id == payload["id"]))
+        ):
+            raise UserHasNotAccess
+        return comment_id

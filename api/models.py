@@ -118,3 +118,4 @@ class Comment(Base):
     author_id: Mapped[int] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE")
     )
+    author: Mapped["User"] = relationship(cascade="all, delete")
