@@ -62,7 +62,7 @@ class TokenVerification:
         self.check_token_type(payload)
 
         return payload
-    
+
     def decrypted_token(self, token: str) -> dict[str, Any]:
         try:
             payload = self.jwt_service.decode_token(token)
@@ -72,12 +72,12 @@ class TokenVerification:
         if payload.get("type") is None or payload.get("username") is None:
             raise InvalidToken
         return payload
-    
+
     def token_is_active(self, payload: dict[str, Any]) -> None:
         if payload["exp"] < timegm(datetime.now().utctimetuple()):
             raise InvalidToken
         return payload
-    
+
     def check_token_type(self, payload: dict[str, Any]) -> None:
         if payload["type"] != self.token_type:
             raise InvalidToken

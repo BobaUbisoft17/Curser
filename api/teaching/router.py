@@ -76,7 +76,9 @@ async def delete_course_handler(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/course/{course_id}/chapter", dependencies=[Depends(IsCourseAuthor())])
+@router.post(
+    "/course/{course_id}/chapter", dependencies=[Depends(IsCourseAuthor())]
+)
 async def create_chapter_handler(
     course_id: int,
     chapter_data: ChapterOnCreate,
@@ -85,7 +87,9 @@ async def create_chapter_handler(
     return await create_chapter(course_id, chapter_data, session)
 
 
-@router.get("/course/{course_id}/chapters", dependencies=[Depends(IsCourseAuthor())])
+@router.get(
+    "/course/{course_id}/chapters", dependencies=[Depends(IsCourseAuthor())]
+)
 async def get_chapters_handler(
     course_id: int,
     session: Annotated[AsyncSession, Depends(DatabaseSession())],

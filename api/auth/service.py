@@ -28,6 +28,7 @@ async def get_user(login_data: LoginData, session: AsyncSession) -> User:
     )
     if Authorization.password_is_valid(login_data.password, user.password):
         return user
+    return None
 
 
 async def user_is_valid(

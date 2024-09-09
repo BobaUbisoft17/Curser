@@ -64,10 +64,9 @@ class TokenIsRefresh:
         token: Annotated[str, Depends(RefreshConfiscationAgent())],
         jwt_service: Annotated[AuthJWT, Depends(JWTServcie())],
     ) -> dict[str, Any]:
-        payload = TokenVerification("refresh", jwt_service).validate_token(
+        return TokenVerification("refresh", jwt_service).validate_token(
             token
         )
-        return payload
 
 
 class IsAuthenticated:
@@ -75,7 +74,7 @@ class IsAuthenticated:
         self,
         token: Annotated[str, Depends(auth_scheme)],
         jwt_service: Annotated[AuthJWT, Depends(JWTServcie())],
-    ) -> Any:
+    ) -> dict[str, Any]:
         return TokenVerification("access", jwt_service).validate_token(
             token
         )

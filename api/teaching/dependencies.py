@@ -35,7 +35,7 @@ class CourseDataIsValid:
 
     def __init__(
         self, session: AsyncSession, course_data: CourseDataForVerification
-    ):
+    ) -> None:
         self.session = session
         self.course_data = course_data
 

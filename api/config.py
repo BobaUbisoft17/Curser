@@ -7,4 +7,3 @@ class Config(BaseSettings):
     SECRETKEY: str = "SECRETKEY"
     DBURL: str = "sqlite+aiosqlite:///sql_app.db"
     JWTALGORITHM: str = "HSA256"
-    
