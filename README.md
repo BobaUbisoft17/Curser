@@ -22,6 +22,8 @@ https://github.com/BobaUbisoft17/Memourse && cd Memourse
 SECRETKEY=ключ для ширфования данных
 DATABASEURL=путь к базе данных
 JWTALGORITHM=алгоритм для ширфования JWT-токенов
+HOST=Хост для запуска(обязательный аргумент для ручного запуска)
+PORT=Порт для приёма подключений(обязательный аргумент)
 ~~~
 
 3. Запуск
@@ -32,9 +34,9 @@ JWTALGORITHM=алгоритм для ширфования JWT-токенов
     + Ручной запуск
     ~~~shell
     pip install -r requirements.txt
-    uvicorn api.main:memourse.create_app --factory --host <выбранный хост>
+    uvicorn api.main:memourse.create_app --factory --host $HOST --port $PORT
     ~~~
 
 
 ## Документация
-Документация доступна по адрессу: http://<указанный хост>:8000/docs
+Документация доступна по адрессу: http://<указанный хост>:<указанный порт>/docs

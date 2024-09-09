@@ -9,6 +9,7 @@ services:
         SECRETKEY: $SECRETKEY
         DATABASEURL: $DATABASEURL
         JWTALGORITHM: $JWTALGORITHM
+        PORT: $PORT
         TZ: Europe/Moscow
       ports:
-        - 8000:8000
+        - $PORT:$PORT
