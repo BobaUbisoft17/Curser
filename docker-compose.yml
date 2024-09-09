@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  server:
+      build: 
+        context: .
+      restart: 
+        on-failure
+      environment:
+        SECRETKEY: $SECRETKEY
+        DATABASEURL: $DATABASEURL
+        JWTALGORITHM: $JWTALGORITHM
+        TZ: Europe/Moscow
+      ports:
+        - 8000:8000
