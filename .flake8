@@ -1,0 +1,5 @@
+[flake8]
+docstring-convention = numpy
+import-order-style = google
+ignore = ANN101, ANN102, E203
+max-complexity = 5
